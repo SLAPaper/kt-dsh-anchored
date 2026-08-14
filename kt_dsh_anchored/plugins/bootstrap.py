@@ -1,0 +1,87 @@
+"""Anchored tool bootstrap plugin for DeepSeek-style sessions.
+
+The first request of a fresh session sees only the configured bootstrap
+tools (default ``read`` + ``bash``). Once the durable session log records
+its first ``tool_call`` event, every later request sees the complete
+catalog. Sessions without a durable store fall back to an in-memory
+promotion flag set when the first tool call is dispatched.
+"""
+
+from typing import Any
+
+from kohakuterrarium.modules.plugin.base import BasePlugin, ToolVisibility
+
+DEFAULT_BOOTSTRAP_TOOLS = ("read", "bash")
+TOOL_CALL_EVENT = "tool_call"
+
+
+class AnchoredToolBootstrapPlugin(BasePlugin):
+    """Hide every tool except the bootstrap set until the first tool call."""
+
+    name = "anchored_tool_bootstrap"
+    description = (
+        "Expose only read+bash on the first request, then the full catalog "
+        "after the session records its first tool_call event."
+    )
+
+    @classmethod
+    def option_schema(cls) -> dict[str, dict[str, Any]]:
+        """Declare the bootstrap catalog as a runtime-mutable option."""
+        return {
+            "bootstrap_tools": {
+                "type": "list",
+                "item_type": "string",
+                "default": list(DEFAULT_BOOTSTRAP_TOOLS),
+                "doc": "Tool names visible before the first durable tool call.",
+            }
+        }
+
+    def __init__(self, *, options: dict[str, Any] | None = None, **kwargs: Any):
+        super().__init__()
+        self.options = {"bootstrap_tools": list(DEFAULT_BOOTSTRAP_TOOLS)}
+        merged = dict(options or {})
+        merged.update(kwargs)
+        if merged:
+            self.set_options(merged)
+        self._bootstrap_tools = self._validate_tools(
+            self.options.get("bootstrap_tools")
+        )
+        self._promoted_memory = False
+
+    def refresh_options(self) -> None:
+        """Re-derive the bootstrap frozenset after validated option updates."""
+        self._bootstrap_tools = self._validate_tools(
+            self.options.get("bootstrap_tools")
+        )
+
+    def get_tool_visibility(self, context: Any) -> ToolVisibility | None:
+        """Return the bootstrap restriction, or None once promoted."""
+        if self._is_promoted(context):
+            return None
+        return ToolVisibility(
+            allowed_tools=self._bootstrap_tools,
+            allowed_subagents=frozenset(),
+        )
+
+    async def pre_tool_dispatch(self, call: Any, context: Any) -> Any | None:
+        """Promote in-memory sessions that have no durable event log."""
+        self._promoted_memory = True
+        return None
+
+    def _is_promoted(self, context: Any) -> bool:
+        if self._promoted_memory:
+            return True
+        store = getattr(context, "session_store", None)
+        events = getattr(store, "events", None)
+        if events is None:
+            return False
+        return any(data.get("type") == TOOL_CALL_EVENT for data in events.values())
+
+    @staticmethod
+    def _validate_tools(value: Any) -> frozenset[str]:
+        if not isinstance(value, (list, tuple)) or not value:
+            raise TypeError("bootstrap_tools must be a non-empty list of strings")
+        tools = frozenset(str(item) for item in value)
+        if not tools or any(not tool for tool in tools):
+            raise TypeError("bootstrap_tools must contain non-empty strings")
+        return tools

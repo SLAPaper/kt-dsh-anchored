@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kt-dsh-anchored"
+version = "0.1.0"
+description = "Anchored two-phase tool bootstrap for DeepSeek V4 Pro on KohakuTerrarium"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "SLAPaper"}]
+dependencies = ["kohakuterrarium"]
+
+[project.urls]
+Repository = "https://github.com/SLAPaper/kt-dsh-anchored"
+
+[tool.setuptools.packages.find]
+include = ["kt_dsh_anchored*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests/unit", "tests/integration"]
+asyncio_mode = "auto"

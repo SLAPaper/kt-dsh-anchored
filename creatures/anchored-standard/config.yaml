@@ -1,0 +1,24 @@
+name: anchored-standard
+version: "1.0"
+
+# Full tool catalog comes from the general creature; this child only
+# changes the prompt and enables the two-phase bootstrap plugin.
+base_config: "@kt-biome/creatures/general"
+
+# Minimal-aligned persona: replace, not append, the inherited general
+# system.md. Tools stay API-only (native schemas) so the bootstrap
+# catalog is the only tool surface the first request sees.
+prompt_mode: replace
+system_prompt: "You are a helpful software engineer assistant."
+
+include_tools_in_prompt: false
+include_hints_in_prompt: false
+skill_index_budget_bytes: 0
+
+plugins:
+  - name: anchored_tool_bootstrap
+    type: package
+    module: kt_dsh_anchored.plugins.bootstrap
+    class: AnchoredToolBootstrapPlugin
+    options:
+      bootstrap_tools: [read, bash]

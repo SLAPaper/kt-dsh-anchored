@@ -1,0 +1,16 @@
+name: kt-dsh-anchored
+version: "0.1.0"
+description: "Anchored two-phase tool bootstrap for DeepSeek V4 Pro on KohakuTerrarium"
+author: "SLAPaper"
+repository: "https://github.com/SLAPaper/kt-dsh-anchored"
+
+creatures:
+  - name: anchored-standard
+    path: creatures/anchored-standard
+    description: "Minimal-aligned DeepSeek creature: read+bash bootstrap, full general catalog after the first durable tool call"
+
+plugins:
+  - name: anchored_tool_bootstrap
+    module: kt_dsh_anchored.plugins.bootstrap
+    class: AnchoredToolBootstrapPlugin
+    description: "Restrict the per-request tool catalog to read+bash until the session records its first tool_call event"
