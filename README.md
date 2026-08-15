@@ -5,6 +5,20 @@ starts each session with the Minimal-aligned system prompt and only
 `read` + `bash`, then exposes the full inherited tool catalog after the
 session records its first durable `tool_call` event.
 
+> [!IMPORTANT]
+> This package depends on the upstream tool-visibility plugin seam,
+> which is not merged yet.
+>
+> - Feature request: https://github.com/Kohaku-Lab/KohakuTerrarium/issues/162
+> - Implementation PR: https://github.com/Kohaku-Lab/KohakuTerrarium/pull/163
+>
+> Until that PR is merged and released, install KohakuTerrarium from the
+> PR branch:
+>
+> ```powershell
+> uv pip install "KohakuTerrarium @ git+https://github.com/SLAPaper/KohakuTerrarium.git@feat/plugin-tool-visibility"
+> ```
+
 This package does not ship a DeepSeek model profile. Configure one
 through `kt model` / `llm_profiles.yaml` and point the creature at it.
 
