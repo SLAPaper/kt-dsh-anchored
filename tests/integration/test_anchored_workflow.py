@@ -31,10 +31,15 @@ class _CapturingNativeLLM(ScriptedLLM):
         self.last_tool_calls: list[NativeToolCall] = []
         self.last_assistant_extra_fields: dict = {}
         self.request_tools: list[list[str]] = []
+        self.request_systems: list[str] = []
 
     async def chat(self, messages, **kwargs):
         tools = kwargs.get("tools") or []
         self.request_tools.append([tool.name for tool in tools])
+        system_messages = [m for m in messages if m.get("role") == "system"]
+        self.request_systems.append(
+            system_messages[0].get("content", "") if system_messages else ""
+        )
         idx = self.call_count
         self.last_tool_calls = []
         async for chunk in super().chat(messages, **kwargs):
@@ -95,6 +100,7 @@ async def test_two_phase_catalog_and_durable_promotion(tmp_path):
 
     assert len(llm.request_tools) >= 2
     assert set(llm.request_tools[0]) == {"bash", "read"}
+    assert "## Skills" not in llm.request_systems[0]
     assert set(llm.request_tools[1]) == {"bash", "glob", "read", "skill"}
 
     # A fresh agent attached to the same durable store starts promoted.

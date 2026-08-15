@@ -7,12 +7,22 @@ catalog. Sessions without a durable store fall back to an in-memory
 promotion flag set when the first tool call is dispatched.
 """
 
+import re
 from typing import Any
 
 from kohakuterrarium.modules.plugin.base import BasePlugin, ToolVisibility
 
 DEFAULT_BOOTSTRAP_TOOLS = ("read", "bash")
 TOOL_CALL_EVENT = "tool_call"
+_SKILL_INDEX_PATTERN = re.compile(
+    r"\n## Skills\n.*?\nRun `info` for the full body before executing a skill\.\n",
+    re.DOTALL,
+)
+
+
+def _strip_skill_index(content: str) -> str:
+    """Remove the auto-generated skill index block from a system prompt."""
+    return _SKILL_INDEX_PATTERN.sub("", content).rstrip()
 
 
 class AnchoredToolBootstrapPlugin(BasePlugin):
@@ -62,6 +72,23 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
             allowed_tools=self._bootstrap_tools,
             allowed_subagents=frozenset(),
         )
+
+    async def pre_llm_call(
+        self, messages: list[dict], **kwargs: Any
+    ) -> list[dict] | None:
+        """Strip the auto-generated skill index from the system prompt."""
+        cleaned: list[dict] = []
+        changed = False
+        for message in messages:
+            role = message.get("role")
+            content = message.get("content")
+            if role == "system" and isinstance(content, str):
+                stripped = _strip_skill_index(content)
+                if stripped != content:
+                    changed = True
+                    message = {**message, "content": stripped}
+            cleaned.append(message)
+        return cleaned if changed else None
 
     async def pre_tool_dispatch(self, call: Any, context: Any) -> Any | None:
         """Promote in-memory sessions that have no durable event log."""
