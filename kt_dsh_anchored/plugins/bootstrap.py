@@ -36,6 +36,7 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
         "Expose only read+bash on the first request, then the full catalog "
         "after the session records its first tool_call event."
     )
+    priority = 400
 
     @classmethod
     def option_schema(cls) -> dict[str, dict[str, Any]]:
