@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "kt-dsh-anchored"
-version = "0.1.1"
+version = "0.2.0"
 description = "Anchored two-phase tool bootstrap for DeepSeek V4 Pro on KohakuTerrarium"
 readme = "README.md"
 license = {text = "MIT"}

@@ -1,5 +1,5 @@
 name: kt-dsh-anchored
-version: "0.1.1"
+version: "0.2.0"
 description: "Anchored two-phase tool bootstrap for DeepSeek V4 Pro on KohakuTerrarium"
 author: "SLAPaper"
 repository: "https://github.com/SLAPaper/kt-dsh-anchored"

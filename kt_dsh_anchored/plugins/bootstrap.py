@@ -30,6 +30,7 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
     """Hide every tool except the bootstrap set until the first tool call."""
 
     name = "anchored_tool_bootstrap"
+    version = "0.2.0"
     description = (
         "Expose only read+bash on the first request, then the full catalog "
         "after the session records its first tool_call event."
