@@ -13,6 +13,7 @@ from typing import Any
 from kohakuterrarium.modules.plugin.base import BasePlugin, ToolVisibility
 
 DEFAULT_BOOTSTRAP_TOOLS = ("read", "bash")
+DEFAULT_DISABLED_PLUGINS = ("goal", "drive_runtime")
 TOOL_CALL_EVENT = "tool_call"
 _SKILL_INDEX_PATTERN = re.compile(
     r"\n## Skills\n.*?\nRun `info` for the full body before executing a skill\.\n",
@@ -43,18 +44,30 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
                 "item_type": "string",
                 "default": list(DEFAULT_BOOTSTRAP_TOOLS),
                 "doc": "Tool names visible before the first durable tool call.",
-            }
+            },
+            "disabled_plugins": {
+                "type": "list",
+                "item_type": "string",
+                "default": list(DEFAULT_DISABLED_PLUGINS),
+                "doc": "Runtime plugins to keep disabled while this plugin is enabled.",
+            },
         }
 
     def __init__(self, *, options: dict[str, Any] | None = None, **kwargs: Any):
         super().__init__()
-        self.options = {"bootstrap_tools": list(DEFAULT_BOOTSTRAP_TOOLS)}
+        self.options = {
+            "bootstrap_tools": list(DEFAULT_BOOTSTRAP_TOOLS),
+            "disabled_plugins": list(DEFAULT_DISABLED_PLUGINS),
+        }
         merged = dict(options or {})
         merged.update(kwargs)
         if merged:
             self.set_options(merged)
         self._bootstrap_tools = self._validate_tools(
             self.options.get("bootstrap_tools")
+        )
+        self._disabled_plugins = self._validate_tools(
+            self.options.get("disabled_plugins")
         )
         self._promoted_memory = False
 
@@ -63,6 +76,19 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
         self._bootstrap_tools = self._validate_tools(
             self.options.get("bootstrap_tools")
         )
+        self._disabled_plugins = self._validate_tools(
+            self.options.get("disabled_plugins")
+        )
+
+    async def on_load(self, context: Any) -> None:
+        """Keep runtime-injected plugins disabled for this creature."""
+        host_agent = getattr(context, "host_agent", None)
+        plugins = getattr(host_agent, "plugins", None)
+        if plugins is None:
+            return
+        for plugin_name in self._disabled_plugins:
+            if plugins.get_plugin(plugin_name) is not None:
+                plugins.disable(plugin_name)
 
     def get_tool_visibility(self, context: Any) -> ToolVisibility | None:
         """Return the bootstrap restriction, or None once promoted."""

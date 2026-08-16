@@ -1,8 +1,10 @@
 """Unit tests for AnchoredToolBootstrapPlugin."""
 
 import pytest
+from types import SimpleNamespace
 
-from kohakuterrarium.modules.plugin.base import ToolVisibility
+from kohakuterrarium.modules.plugin.base import BasePlugin, ToolVisibility
+from kohakuterrarium.modules.plugin.manager import PluginManager
 from kohakuterrarium.modules.plugin.option_validation import PluginOptionError
 from kt_dsh_anchored.plugins.bootstrap import AnchoredToolBootstrapPlugin
 
@@ -72,6 +74,40 @@ class TestOptions:
     def test_non_string_tools_rejected_by_schema(self):
         with pytest.raises(PluginOptionError, match="string"):
             AnchoredToolBootstrapPlugin(bootstrap_tools=[1])
+
+
+class TestRuntimePluginSuppression:
+    async def test_on_load_disables_default_runtime_plugins(self):
+        plugin = AnchoredToolBootstrapPlugin()
+        mgr = PluginManager()
+
+        class _Named(BasePlugin):
+            def __init__(self, name):
+                super().__init__()
+                self.name = name
+
+        mgr.register(_Named("goal"))
+        mgr.register(_Named("drive_runtime"))
+        host = SimpleNamespace(plugins=mgr)
+        await plugin.on_load(SimpleNamespace(host_agent=host))
+        assert mgr.is_enabled("goal") is False
+        assert mgr.is_enabled("drive_runtime") is False
+
+    async def test_custom_disabled_plugins_option(self):
+        plugin = AnchoredToolBootstrapPlugin(disabled_plugins=["goal"])
+        mgr = PluginManager()
+
+        class _Named(BasePlugin):
+            def __init__(self, name):
+                super().__init__()
+                self.name = name
+
+        mgr.register(_Named("goal"))
+        mgr.register(_Named("drive_runtime"))
+        host = SimpleNamespace(plugins=mgr)
+        await plugin.on_load(SimpleNamespace(host_agent=host))
+        assert mgr.is_enabled("goal") is False
+        assert mgr.is_enabled("drive_runtime") is True
 
 
 class TestPromptSanitization:
