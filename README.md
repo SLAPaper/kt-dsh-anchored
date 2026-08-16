@@ -1,23 +1,14 @@
 # kt-dsh-anchored
 
-A KohakuTerrarium package for DeepSeek V4 Pro: a creature preset that
-starts each session with the Minimal-aligned system prompt and only
-`read` + `bash`, then exposes the full inherited tool catalog after the
-session records its first durable `tool_call` event.
+A self-contained KohakuTerrarium package for DeepSeek V4 Pro: a creature
+preset that starts each session with the Minimal-aligned system prompt and
+only `read` + `bash`, then exposes the complete declared tool catalog
+after the session records its first durable `tool_call` event.
 
 > [!IMPORTANT]
-> This package depends on the upstream tool-visibility plugin seam,
-> which is not merged yet.
->
-> - Feature request: https://github.com/Kohaku-Lab/KohakuTerrarium/issues/162
-> - Implementation PR: https://github.com/Kohaku-Lab/KohakuTerrarium/pull/163
->
-> Until that PR is merged and released, install KohakuTerrarium from the
-> PR branch:
->
-> ```powershell
-> uv pip install "KohakuTerrarium @ git+https://github.com/SLAPaper/KohakuTerrarium.git@feat/plugin-tool-visibility"
-> ```
+> This package requires the tool-visibility plugin seam from upstream PR
+> https://github.com/Kohaku-Lab/KohakuTerrarium/pull/163 (merged as
+> `a83d90e3`). Use a KohakuTerrarium build that contains that commit.
 
 This package does not ship a DeepSeek model profile. Configure one
 through `kt model` / `llm_profiles.yaml` and point the creature at it.
@@ -25,12 +16,11 @@ through `kt model` / `llm_profiles.yaml` and point the creature at it.
 ## Install
 
 ```powershell
-kt install https://github.com/Kohaku-Lab/kt-biome.git
 kt install https://github.com/SLAPaper/kt-dsh-anchored.git
 ```
 
-`kt-biome` is a runtime dependency: the creature inherits its full tool
-and sub-agent catalog from `@kt-biome/creatures/general`.
+The creature declares its own tools, sub-agents, and prompt; it has no
+runtime dependency on `@kt-biome/creatures/general`.
 
 ## Run
 
@@ -56,10 +46,12 @@ plugins:
 
 ## Behavior
 
-- Native tool calling only (`tool_format: native` is inherited from
-  `general`); text-mode prompt filtering is out of scope.
+- Native tool calling only (`tool_format: native`); text-mode prompt
+  filtering is out of scope.
 - The first request of a fresh session sees exactly the bootstrap tools
   and no sub-agents.
+- The creature declares its own tool/sub-agent catalog and enables no
+  other plugins by default, so prompt contributions stay minimal.
 - Promotion is derived from the persisted session event log, so resume
   and reload keep the correct phase. A failed tool still promotes.
 - Sessions without a durable store promote in memory on the first

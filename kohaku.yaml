@@ -7,7 +7,7 @@ repository: "https://github.com/SLAPaper/kt-dsh-anchored"
 creatures:
   - name: anchored-standard
     path: creatures/anchored-standard
-    description: "Minimal-aligned DeepSeek creature: read+bash bootstrap, full general catalog after the first durable tool call"
+    description: "Minimal-aligned DeepSeek creature: read+bash bootstrap, full declared catalog after the first durable tool call"
 
 plugins:
   - name: anchored_tool_bootstrap

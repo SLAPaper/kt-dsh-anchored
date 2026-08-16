@@ -1,20 +1,57 @@
 name: anchored-standard
 version: "1.1"
 
-# Full tool catalog comes from the general creature; this child only
-# changes the prompt and enables the two-phase bootstrap plugin.
-base_config: "@kt-biome/creatures/general"
-
-# Minimal-aligned persona: replace, not append, the inherited general
-# system.md. Tools stay API-only (native schemas) so the bootstrap
-# catalog is the only tool surface the first request sees.
-prompt_mode: replace
 system_prompt: "You are a helpful software engineer assistant."
 
 include_tools_in_prompt: false
 include_hints_in_prompt: false
 skill_index_budget_bytes: 0
 skills: []
+
+controller:
+  tool_format: native
+
+input:
+  type: cli
+
+output:
+  type: stdout
+  controller_direct: true
+
+tools:
+  - { name: bash, type: builtin }
+  - { name: python, type: builtin }
+  - { name: read, type: builtin }
+  - { name: write, type: builtin }
+  - { name: edit, type: builtin }
+  - { name: multi_edit, type: builtin }
+  - { name: notebook_read, type: builtin }
+  - { name: notebook_edit, type: builtin }
+  - { name: glob, type: builtin }
+  - { name: grep, type: builtin }
+  - { name: tree, type: builtin }
+  - { name: scratchpad, type: builtin }
+  - { name: info, type: builtin }
+  - { name: ask_user, type: builtin }
+  - { name: show_card, type: builtin }
+  - { name: json_read, type: builtin }
+  - { name: json_write, type: builtin }
+  - { name: send_message, type: builtin }
+  - { name: stop_task, type: builtin }
+  - { name: delete_trigger, type: builtin }
+  - { name: add_timer, type: trigger }
+  - { name: add_schedule, type: trigger }
+  - { name: search_memory, type: builtin }
+  - { name: web_fetch, type: builtin }
+  - { name: web_search, type: builtin }
+
+subagents:
+  - { name: explore, type: builtin }
+  - { name: plan, type: builtin }
+  - { name: worker, type: builtin }
+  - { name: critic, type: builtin }
+  - { name: summarize, type: builtin }
+  - { name: research, type: builtin }
 
 plugins:
   - name: anchored_tool_bootstrap
