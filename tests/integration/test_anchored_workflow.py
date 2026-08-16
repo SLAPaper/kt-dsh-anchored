@@ -61,10 +61,11 @@ def _make_config(tmp_path):
     )
 
 
-def _make_agent(cfg, llm, store):
+def _make_agent(cfg, llm, store, *, pwd=None):
     agent = Agent(
         cfg,
         llm=llm,
+        pwd=pwd,
         tools=[
             get_builtin_tool("read"),
             get_builtin_tool("bash"),
@@ -77,6 +78,13 @@ def _make_agent(cfg, llm, store):
 
 
 async def test_two_phase_catalog_and_durable_promotion(tmp_path):
+    skill_dir = tmp_path / ".kt" / "skills" / "demo-skill"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        "---\nname: demo-skill\ndescription: Example skill for anchored tests.\n---\n\n# Demo\n",
+        encoding="utf-8",
+    )
+
     target = tmp_path / "note.txt"
     target.write_text("hello", encoding="utf-8")
     read_call = NativeToolCall(
@@ -90,7 +98,7 @@ async def test_two_phase_catalog_and_durable_promotion(tmp_path):
         [ScriptEntry("reading now"), ScriptEntry("done")],
         first_round_call=read_call,
     )
-    agent = _make_agent(_make_config(tmp_path), llm, store)
+    agent = _make_agent(_make_config(tmp_path), llm, store, pwd=tmp_path)
     await agent.start()
     try:
         await agent._process_event(create_user_input_event("inspect the file"))
@@ -102,11 +110,12 @@ async def test_two_phase_catalog_and_durable_promotion(tmp_path):
     assert set(llm.request_tools[0]) == {"bash", "read"}
     assert "## Skills" not in llm.request_systems[0]
     assert set(llm.request_tools[1]) == {"bash", "glob", "read", "skill"}
+    assert "## Skills" in llm.request_systems[1]
 
     # A fresh agent attached to the same durable store starts promoted.
     resumed_llm = _CapturingNativeLLM([ScriptEntry("resumed")], first_round_call=None)
     reopened = SessionStore(tmp_path / "run.kohakutr")
-    resumed = _make_agent(_make_config(tmp_path), resumed_llm, reopened)
+    resumed = _make_agent(_make_config(tmp_path), resumed_llm, reopened, pwd=tmp_path)
     await resumed.start()
     try:
         await resumed._process_event(create_user_input_event("resume please"))
@@ -115,3 +124,4 @@ async def test_two_phase_catalog_and_durable_promotion(tmp_path):
     reopened.close()
 
     assert set(resumed_llm.request_tools[0]) == {"bash", "glob", "read", "skill"}
+    assert "## Skills" in resumed_llm.request_systems[0]

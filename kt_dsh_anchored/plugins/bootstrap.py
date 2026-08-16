@@ -1,10 +1,11 @@
 """Anchored tool bootstrap plugin for DeepSeek-style sessions.
 
 The first request of a fresh session sees only the configured bootstrap
-tools (default ``read`` + ``bash``). Once the durable session log records
-its first ``tool_call`` event, every later request sees the complete
-catalog. Sessions without a durable store fall back to an in-memory
-promotion flag set when the first tool call is dispatched.
+tools (default ``read`` + ``bash``) and a minimal system prompt. Once the
+durable session log records its first ``tool_call`` event, every later
+request sees the complete catalog, skill index, and full system prompt.
+Sessions without a durable store fall back to an in-memory promotion flag
+set when the first tool call is dispatched.
 """
 
 import re
@@ -70,6 +71,7 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
         self._disabled_plugins = self._validate_tools(
             self.options.get("disabled_plugins")
         )
+        self._context: Any = None
         self._promoted_memory = False
 
     def refresh_options(self) -> None:
@@ -82,7 +84,8 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
         )
 
     async def on_load(self, context: Any) -> None:
-        """Keep runtime-injected plugins disabled for this creature."""
+        """Keep runtime-injected plugins disabled and retain host context."""
+        self._context = context
         host_agent = getattr(context, "host_agent", None)
         plugins = getattr(host_agent, "plugins", None)
         if plugins is None:
@@ -103,7 +106,9 @@ class AnchoredToolBootstrapPlugin(BasePlugin):
     async def pre_llm_call(
         self, messages: list[dict], **kwargs: Any
     ) -> list[dict] | None:
-        """Strip the auto-generated skill index from the system prompt."""
+        """Strip the skill index until the session's first tool call."""
+        if self._is_promoted(self._context):
+            return None
         cleaned: list[dict] = []
         changed = False
         for message in messages:

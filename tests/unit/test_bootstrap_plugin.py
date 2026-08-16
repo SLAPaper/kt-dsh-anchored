@@ -135,6 +135,32 @@ class TestPromptSanitization:
         messages = [{"role": "system", "content": "Minimal prompt only."}]
         assert await plugin.pre_llm_call(messages) is None
 
+    async def test_promoted_session_keeps_skill_index(self):
+        plugin = AnchoredToolBootstrapPlugin()
+        context = _FakeContext(_FakeStore({"e0": _event("tool_call")}))
+        await plugin.on_load(context)
+        messages = [
+            {
+                "role": "system",
+                "content": "## Skills\n\n- `arming-thought` — example skill\n",
+            },
+            {"role": "user", "content": "hi"},
+        ]
+        assert await plugin.pre_llm_call(messages) is None
+
+    async def test_sessionless_promotion_stops_stripping(self):
+        plugin = AnchoredToolBootstrapPlugin()
+        context = _FakeContext(None)
+        await plugin.on_load(context)
+        await plugin.pre_tool_dispatch(object(), context)
+        messages = [
+            {
+                "role": "system",
+                "content": "## Skills\n\n- `arming-thought` — example skill\n",
+            },
+        ]
+        assert await plugin.pre_llm_call(messages) is None
+
     async def test_non_string_system_content_is_untouched(self):
         plugin = AnchoredToolBootstrapPlugin()
         content = [{"type": "text", "text": "## Skills"}]
