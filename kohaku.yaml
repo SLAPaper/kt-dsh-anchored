@@ -1,10 +1,13 @@
 name: kt-dsh-anchored
-version: "0.2.0"
+version: "0.3.0"
 description: "Anchored two-phase tool bootstrap for DeepSeek V4 Pro on KohakuTerrarium"
 author: "SLAPaper"
 repository: "https://github.com/SLAPaper/kt-dsh-anchored"
 
 creatures:
+  - name: anchored-base
+    path: creatures/anchored-base
+    description: "Minimal system prompt creature"
   - name: anchored-standard
     path: creatures/anchored-standard
     description: "Minimal-aligned DeepSeek creature: read+bash bootstrap, full declared catalog after the first durable tool call"

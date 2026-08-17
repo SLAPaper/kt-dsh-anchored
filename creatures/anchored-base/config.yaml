@@ -1,7 +1,7 @@
-name: anchored-standard
-version: "1.3"
+name: anchored-base
+version: "1.0"
 
-system_prompt: "You are a helpful software engineer assistant."
+system_prompt: "You are a helpful assistant."
 skill_mode: dynamic
 skill_index_budget_bytes: 16384   # 16KB
 
@@ -66,10 +66,4 @@ subagents:
   - { name: summarize, type: builtin }
   - { name: research, type: builtin }
 
-plugins:
-  - name: anchored_tool_bootstrap
-    type: package
-    module: kt_dsh_anchored.plugins.bootstrap
-    class: AnchoredToolBootstrapPlugin
-    options:
-      bootstrap_tools: [read, bash]
+plugins: []
