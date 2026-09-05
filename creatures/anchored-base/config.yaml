@@ -1,5 +1,5 @@
 name: anchored-base
-version: "1.1"
+version: "1.2"
 
 system_prompt: "You are a helpful assistant."
 
@@ -7,13 +7,6 @@ tool_doc_mode: full
 
 include_tools_in_prompt: false
 include_hints_in_prompt: false
-
-input:
-  type: cli
-
-output:
-  type: stdout
-  controller_direct: true
 
 tools:
   - { name: bash, type: builtin }
