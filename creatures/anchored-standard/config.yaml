@@ -1,16 +1,12 @@
 name: anchored-standard
-version: "1.3"
+version: "1.4"
 
 system_prompt: "You are a helpful software engineer assistant."
-skill_mode: dynamic
-skill_index_budget_bytes: 16384   # 16KB
+
+tool_doc_mode: full
 
 include_tools_in_prompt: false
 include_hints_in_prompt: false
-skills: ["*"]
-
-controller:
-  tool_format: native
 
 input:
   type: cli
@@ -24,47 +20,27 @@ tools:
   - { name: python, type: builtin }
   - { name: read, type: builtin }
   - { name: write, type: builtin }
-  - { name: edit, type: builtin }
   - { name: multi_edit, type: builtin }
-  - { name: notebook_read, type: builtin }
-  - { name: notebook_edit, type: builtin }
   - { name: glob, type: builtin }
   - { name: grep, type: builtin }
   - { name: tree, type: builtin }
-  - { name: scratchpad, type: builtin }
   - { name: info, type: builtin }
-  - { name: ask_user, type: builtin }
-  - { name: show_card, type: builtin }
-  - { name: json_read, type: builtin }
-  - { name: json_write, type: builtin }
-  - { name: send_message, type: builtin }
-  - { name: stop_task, type: builtin }
-  - { name: delete_trigger, type: builtin }
-  - { name: add_timer, type: trigger }
-  - { name: add_schedule, type: trigger }
+  - { name: skill, type: builtin }
   - { name: search_memory, type: builtin }
   - { name: web_fetch, type: builtin }
   - { name: web_search, type: builtin }
-  - { name: group_add_node, type: builtin }
-  - { name: group_channel, type: builtin }
-  - { name: group_kill_node, type: builtin }
-  - { name: group_pause_node, type: builtin }
-  - { name: group_remove_node, type: builtin }
-  - { name: group_resume_node, type: builtin }
-  - { name: group_send, type: builtin }
-  - { name: group_spawn_child, type: builtin }
-  - { name: group_start_node, type: builtin }
-  - { name: group_status, type: builtin }
-  - { name: group_stop_node, type: builtin }
-  - { name: group_wire, type: builtin }
+  - { name: ask_user, type: builtin }
+  - { name: show_card, type: builtin }
+  - { name: stop_task, type: builtin }
 
 subagents:
   - { name: explore, type: builtin }
   - { name: plan, type: builtin }
   - { name: worker, type: builtin }
   - { name: critic, type: builtin }
-  - { name: summarize, type: builtin }
-  - { name: research, type: builtin }
+
+skill_index_budget_bytes: 16384   # 16KB
+skills: ["*"]
 
 plugins:
   - name: anchored_tool_bootstrap
